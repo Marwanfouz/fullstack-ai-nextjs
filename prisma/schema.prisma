@@ -49,7 +49,11 @@ model EntryAnalysis {
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
-  color          String  @default("#0101fe") @db.Text
+  color    String  @default("#0101fe") @db.Text
+  mood     String
+  subject  String
+  negative Boolean
+  summary  String  @db.Text
 
   @@unique([entryId])
   @@index([userId])
