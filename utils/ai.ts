@@ -1,4 +1,5 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai'
+import { HarmBlockThreshold, HarmCategory } from '@google/generative-ai'
 import { StructuredOutputParser } from '@langchain/core/output_parsers'
 import { PromptTemplate } from '@langchain/core/prompts'
 import z from 'zod'
@@ -52,9 +53,21 @@ export const analyze = async (content: string) => {
     temperature: 0,
     model: 'gemini-1.5-flash',
     maxOutputTokens: 2048,
+    safetySettings: [
+      {
+        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      },
+    ],
   })
 
   // Batch and stream are also supported
   const res = await model.invoke(prompt)
-  return res.content
+  try {
+
+    return parser.parse(res.content)
+
+  } catch (error) {
+    console.log(error)
+  }
 }

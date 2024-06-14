@@ -1,6 +1,5 @@
 import EntryCard from '@/components/EntryCard'
 import NewEntry from '@/components/NewEntry'
-import { analyze } from '@/utils/ai'
 import { getUserFromClerkID } from '@/utils/auth'
 import { prisma } from '@/utils/db'
 import Link from 'next/link'
@@ -24,9 +23,6 @@ const getEntries = async () => {
 
 const JournalPage = async () => {
   const entries = await getEntries()
-  const aiResponse = await analyze(
-    `found a new coffe shop`
-  )
 
   return (
     <div className="px-6 py-8 bg-zinc-100/50 h-full">
@@ -42,7 +38,6 @@ const JournalPage = async () => {
           </div>
         ))}
       </div>
-      <div>{aiResponse.toString()}</div>
     </div>
   )
 }

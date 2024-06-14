@@ -44,16 +44,17 @@ model EntryAnalysis {
   updatedAt DateTime @updatedAt
 
   entryId String
-  entry   JournalEntry @relation(fields: [entryId], references: [id])
+  entry   JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   color    String  @default("#0101fe") @db.Text
   mood     String
   subject  String
   negative Boolean
   summary  String  @db.Text
+  sentimentScore Float
 
   @@unique([entryId])
   @@index([userId])
