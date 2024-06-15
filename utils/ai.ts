@@ -2,6 +2,10 @@ import { ChatGoogleGenerativeAI } from '@langchain/google-genai'
 import { HarmBlockThreshold, HarmCategory } from '@google/generative-ai'
 import { StructuredOutputParser } from '@langchain/core/output_parsers'
 import { PromptTemplate } from '@langchain/core/prompts'
+import { Document } from '@langchain/core/documents'
+import { loadQARefineChain } from 'langchain/chains'
+import { MemoryVectorStore } from 'langchain/vectorstores/memory'
+import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai'
 import z from 'zod'
 
 const zodSchema = z.object({
@@ -64,10 +68,39 @@ export const analyze = async (content: string) => {
   // Batch and stream are also supported
   const res = await model.invoke(prompt)
   try {
-
     return parser.parse(res.content)
-
   } catch (error) {
     console.log(error)
   }
+}
+
+export const qa = async (question, entries) => {
+  const docs = entries.map(
+    (entry) =>
+      new Document({
+        pageContent: entry.content,
+        metadata: { source: entry.id, date: entry.createdAt },
+      })
+  )
+
+  const model = new ChatGoogleGenerativeAI({
+    temperature: 0,
+    model: 'gemini-1.5-flash',
+    maxOutputTokens: 2048,
+    safetySettings: [
+      {
+        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      },
+    ],
+  })
+  const chain = loadQARefineChain(model)
+  const embeddings = new GoogleGenerativeAIEmbeddings()
+  const store = await MemoryVectorStore.fromDocuments(docs, embeddings)
+  const relevantDocs = await store.similaritySearch(question)
+  const res = await chain.call({
+    input_documents: relevantDocs,
+    question,
+  })
+  return res.output_text
 }
